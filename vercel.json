@@ -2,6 +2,10 @@
   "version": 2,
   "builds": [
     {
+      "src": "public/**",
+      "use": "@vercel/static"
+    },
+    {
       "src": "server.js",
       "use": "@vercel/node"
     }
@@ -10,6 +14,18 @@
     {
       "src": "/api/(.*)",
       "dest": "server.js"
+    },
+    {
+      "src": "/img/(.*)",
+      "dest": "public/img/$1"
+    },
+    {
+      "src": "/styles.css",
+      "dest": "public/styles.css"
+    },
+    {
+      "src": "/favicon\\.(ico|png)",
+      "dest": "public/img/favicon.$1"
     },
     {
       "src": "/(.*)",
