@@ -11,7 +11,7 @@
 <body>
   <div class="chat-container">
     <div class="chat-header">
-      <img src="/img/mcaptain.jpg" alt="Captain McAptain" />
+      <img src="/img/mcaptain-profile.jpg" alt="Captain McAptain" />
       <h2>Chat with Captain McAptain!</h2>
     </div>
     
@@ -40,7 +40,23 @@
       
       const contentDiv = document.createElement('div');
       contentDiv.className = 'message-content';
-      contentDiv.textContent = content;
+      if (isUser) {
+        contentDiv.textContent = content;
+      } else {
+        const imageTags = [];
+        const cleanText = content.replace(/\[image:([\w\-]+\.\w+)\]/g, (_, filename) => {
+          imageTags.push(filename);
+          return '';
+        }).trim();
+        contentDiv.textContent = cleanText;
+        imageTags.forEach(filename => {
+          const img = new Image();
+          img.src = '/img/' + filename;
+          img.alt = filename;
+          img.className = 'chat-image';
+          img.onload = () => contentDiv.appendChild(img);
+        });
+      }
       messageDiv.appendChild(contentDiv);
       
       if (sources && sources.length > 0) {
@@ -130,7 +146,7 @@
     
     // Add welcome message
     window.onload = () => {
-      addMessage('Ahoy, matey! Ask me about my adventures and crew!', false);
+      addMessage('Ahoy, mate! Ask me about my adventures and crew!', false);
     };
   </script>
 </body>
