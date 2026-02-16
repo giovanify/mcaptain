@@ -25,11 +25,11 @@ body {
     border-radius: 12px;
     display: flex;
     flex-direction: column;
-    min-height: 90vh;
-    max-height: 90vh;
+    min-height: 94vh;
+    max-height: 94vh;
     overflow: hidden;
     background-color: #FFFFFF;
-    padding: 24px;
+    padding: 16px;
 
     @media (min-width: 600px) {
         border-radius: 24px;
@@ -48,13 +48,13 @@ body {
 }
 
 .chat-header img {
-    width: 140px;
+    width: 120px;
     height: auto;
     margin-bottom: 16px;
     border-radius: 100%;
 
     @media (min-width: 600px) {
-        width: 180px;
+        width: 160px;
     }
 }
 
