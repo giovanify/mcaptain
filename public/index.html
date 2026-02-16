@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chat with Captain McAptain!</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="icon" type="image/png" href="/img/favicon.png">
+  <link rel="icon" type="image/x-icon" href="/favicon.ico">
+</head>
+<body>
+  <div class="chat-container">
+    <div class="chat-header">
+      <img src="/img/mcaptain.jpg" alt="Captain McAptain" />
+      <h2>Chat with Captain McAptain!</h2>
+    </div>
+    
+    <div class="chat-messages" id="chatMessages">
+      <!-- Messages will appear here -->
+    </div>
+    
+    <div class="chat-input">
+      <input 
+        type="text" 
+        id="userInput" 
+        placeholder="Ask a question..."
+        onkeypress="handleKeyPress(event)"
+      />
+      <button onclick="sendMessage()" id="sendButton">Send</button>
+    </div>
+  </div>
+
+  <script>
+    const API_URL = window.location.origin;
+    
+    function addMessage(content, isUser, sources = null) {
+      const messagesDiv = document.getElementById('chatMessages');
+      const messageDiv = document.createElement('div');
+      messageDiv.className = `message ${isUser ? 'user' : 'assistant'}`;
+      
+      const contentDiv = document.createElement('div');
+      contentDiv.className = 'message-content';
+      contentDiv.textContent = content;
+      messageDiv.appendChild(contentDiv);
+      
+      if (sources && sources.length > 0) {
+        const sourcesDiv = document.createElement('div');
+        sourcesDiv.className = 'sources';
+        sourcesDiv.innerHTML = `<small>⚓ ${sources.length} relevant ${sources.length === 1 ? 'source' : 'sources'} found in Lori Lori's archives</small>`;
+        messageDiv.appendChild(sourcesDiv);
+      }
+      
+      messagesDiv.appendChild(messageDiv);
+      messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    }
+    
+    function showLoading() {
+      const messagesDiv = document.getElementById('chatMessages');
+      const loadingDiv = document.createElement('div');
+      loadingDiv.id = 'loading';
+      loadingDiv.className = 'message assistant';
+      loadingDiv.innerHTML = '<div class="message-content"><div class="loading"></div></div>';
+      messagesDiv.appendChild(loadingDiv);
+      messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    }
+    
+    function hideLoading() {
+      const loadingDiv = document.getElementById('loading');
+      if (loadingDiv) {
+        loadingDiv.remove();
+      }
+    }
+    
+    async function sendMessage() {
+      const input = document.getElementById('userInput');
+      const button = document.getElementById('sendButton');
+      const question = input.value.trim();
+      
+      if (!question) return;
+      
+      // Disable input
+      input.disabled = true;
+      button.disabled = true;
+      
+      // Add user message
+      addMessage(question, true);
+      input.value = '';
+      
+      // Show loading
+      showLoading();
+      
+      try {
+        const response = await fetch(`${API_URL}/api/chat`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ question })
+        });
+        
+        const data = await response.json();
+        
+        hideLoading();
+        
+        if (!response.ok) {
+          console.error('Server error:', data);
+          addMessage(`Error: ${data.details || data.error}`, false);
+          return;
+        }
+        
+        addMessage(data.answer, false, data.sources);
+        
+      } catch (error) {
+        hideLoading();
+        console.error('Fetch error:', error);
+        addMessage(`Error: ${error.message}`, false);
+      } finally {
+        // Re-enable input
+        input.disabled = false;
+        button.disabled = false;
+        input.focus();
+      }
+    }
+    
+    function handleKeyPress(event) {
+      if (event.key === 'Enter') {
+        sendMessage();
+      }
+    }
+    
+    // Add welcome message
+    window.onload = () => {
+      addMessage('Ahoy, matey! Ask me about my adventures and crew!', false);
+    };
+  </script>
+</body>
+</html>
+
