@@ -15,14 +15,18 @@ body {
     line-height: 1.7;
 
     @media (min-width: 600px) {
-        padding: 52px;
+        padding: 42px;
     }
+}
+
+a {
+    color: #000000;
 }
 
 .chat-container {
     width: 100%;
     max-width: 680px;
-    border-radius: 12px;
+    border-radius: 24px;
     display: flex;
     flex-direction: column;
     min-height: 94vh;
@@ -32,25 +36,23 @@ body {
     padding: 16px;
 
     @media (min-width: 600px) {
-        border-radius: 24px;
-        min-height: 85vh;
-        max-height: 85vh;
+        min-height: 90vh;
+        max-height: 90vh;
     }
 }
 
 .chat-header {
-    padding: 24px 20px 20px;
+    padding: 16px 20px 20px;
     text-align: center;
 
     @media (min-width: 600px) {
-        padding: 32px 32px 24px;
+        padding: 16px 32px;
     }
 }
 
 .chat-header img {
     width: 120px;
     height: auto;
-    margin-bottom: 16px;
     border-radius: 100%;
 
     @media (min-width: 600px) {
@@ -62,7 +64,6 @@ body {
     font-size: 20px;
     font-weight: 600;
     color: #000000;
-    margin-bottom: 8px;
     letter-spacing: -0.02em;
 
     @media (min-width: 600px) {
@@ -254,4 +255,13 @@ body {
 @keyframes spin {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
+}
+
+footer {
+    padding: 24px 16px 8px;
+    font-size: 12px;
+    text-align: center;
+    display: flex;
+    justify-content: center;
+    gap: 16px;
 }
