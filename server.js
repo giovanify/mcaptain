@@ -3,6 +3,7 @@ const express = require('express');
 const cors = require('cors');
 const rateLimit = require('express-rate-limit');
 const { chatWithContext } = require('./chat');
+const pool = require('./db');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -51,9 +52,14 @@ app.post('/api/chat', chatLimiter, async (req, res) => {
   }
 });
 
-// Health check
-app.get('/health', (req, res) => {
-  res.json({ status: 'ok' });
+// Health check — also pings SingleStore to prevent trial workspace suspension
+app.get('/health', async (req, res) => {
+  try {
+    await pool.query('SELECT 1');
+    res.json({ status: 'ok', db: 'ok' });
+  } catch (error) {
+    res.status(500).json({ status: 'ok', db: 'error', details: error.message });
+  }
 });
 
 // Root route
