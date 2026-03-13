@@ -23,7 +23,6 @@ Captain McAptain Chat — a RAG (Retrieval-Augmented Generation) chatbot where u
 - `db.js` — pg connection pool to Supabase/PostgreSQL.
 - `ingest.js` — Ingests .txt files from content/, chunks them, creates embeddings, and inserts into mcaptain table.
 - `createTable.js` — Creates the mcaptain table with pgvector and optional HNSW index.
-- `index.js` — Standalone script for testing embedding creation (not part of the main app).
 
 **Frontend:**
 - `public/index.html` — Single-page chat UI with inline JavaScript (vanilla JS, no framework).
