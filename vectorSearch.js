@@ -1,6 +1,7 @@
 const pool = require('./db');
 const OpenAI = require('openai');
 const NodeCache = require('node-cache');
+const pgvector = require('pgvector/pg');
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY
@@ -40,51 +41,40 @@ async function createEmbedding(text) {
   }
 }
 
-// Search similar vectors in SingleStore
+// Search similar vectors in Supabase (PostgreSQL + pgvector)
 async function searchSimilarVectors(queryEmbedding, limit = 5) {
   try {
-    console.log('🔍 Searching vectors in SingleStore...');
-    
-    // Convert embedding array to binary format for SingleStore
-    const float32Array = new Float32Array(queryEmbedding);
-    const buffer = Buffer.from(float32Array.buffer);
-    
-    // Get a connection
-    const connection = await pool.getConnection();
-    
+    console.log('🔍 Searching vectors in Supabase...');
+
+    const client = await pool.connect();
     try {
-      // Set the query embedding as a session variable
-      await connection.query('SET @query_vec = ?', [buffer]);
-      
-      // Now use it in the DOT_PRODUCT query
-      // Use string interpolation for LIMIT to avoid the prepared statement issue
+      await pgvector.registerTypes(client);
+
+      const embeddingSql = pgvector.toSql(queryEmbedding);
+      // Cosine distance (<=>): lower = more similar. Return 1 - distance as similarity.
       const query = `
         SELECT 
           id,
           text,
-          DOT_PRODUCT(vector, @query_vec) as similarity
+          source,
+          (1 - (embedding <=> $1::vector)) as similarity
         FROM mcaptain
-        ORDER BY similarity DESC
-        LIMIT ${limit}
+        ORDER BY embedding <=> $1::vector
+        LIMIT $2
       `;
-      
-      console.log('Executing query with limit:', limit);
-      
-      // Use .query() instead of .execute()
-      const [rows] = await connection.query(query);
-      
+
+      const { rows } = await client.query(query, [embeddingSql, limit]);
+
       console.log('✅ Found', rows.length, 'results');
-      
+
       return rows;
     } finally {
-      connection.release();
+      client.release();
     }
-    
   } catch (error) {
     console.error('❌ Error searching vectors:', {
       message: error.message,
-      code: error.code,
-      sqlMessage: error.sqlMessage
+      code: error.code
     });
     throw error;
   }
@@ -93,15 +83,15 @@ async function searchSimilarVectors(queryEmbedding, limit = 5) {
 // Main search function
 async function semanticSearch(question, limit = 5) {
   console.log('📝 Starting semantic search for:', question);
-  
+
   // 1. Create embedding from question
   const questionEmbedding = await createEmbedding(question);
-  
+
   // 2. Search similar vectors
   const results = await searchSimilarVectors(questionEmbedding, limit);
-  
+
   console.log('✅ Semantic search complete');
-  
+
   return results;
 }
 

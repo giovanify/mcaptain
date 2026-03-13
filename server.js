@@ -6,7 +6,6 @@ const { chatWithContext } = require('./chat');
 const pool = require('./db');
 
 const app = express();
-const PORT = process.env.PORT || 3000;
 
 // Rate limiter for chat endpoint
 const chatLimiter = rateLimit({
@@ -52,7 +51,7 @@ app.post('/api/chat', chatLimiter, async (req, res) => {
   }
 });
 
-// Health check — also pings SingleStore to prevent trial workspace suspension
+// Health check — pings database
 app.get('/health', async (req, res) => {
   try {
     await pool.query('SELECT 1');
@@ -67,10 +66,11 @@ app.get('/', (req, res) => {
   res.sendFile(__dirname + '/public/index.html');
 });
 
-// For local development
+// For local development (PORT=0 uses a random available port)
 if (require.main === module) {
-  app.listen(PORT, () => {
-    console.log(`🚀 Server running on http://localhost:${PORT}`);
+  const server = app.listen(0, () => {
+    const { port } = server.address();
+    console.log(`🚀 Server running on http://localhost:${port}`);
   });
 }
 

@@ -1,19 +1,18 @@
 require('dotenv').config();
-const mysql = require('mysql2/promise');
+const { Pool } = require('pg');
+const pgvector = require('pgvector/pg');
 
-const pool = mysql.createPool({
-  host: process.env.SINGLESTORE_HOST,
-  port: process.env.SINGLESTORE_PORT,
-  user: process.env.SINGLESTORE_USER,
-  password: process.env.SINGLESTORE_PASSWORD,
-  database: process.env.SINGLESTORE_DATABASE,
-  
-  waitForConnections: true,
-  connectionLimit: 10,
-  queueLimit: 0,
-  
-  enableKeepAlive: true,
-  keepAliveInitialDelay: 0
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: process.env.DATABASE_URL?.includes('localhost') ? false : { rejectUnauthorized: false },
+  max: 10,
+  idleTimeoutMillis: 30000,
+  connectionTimeoutMillis: 10000
+});
+
+// Register pgvector types on new connections (needed for vector columns)
+pool.on('connect', async (client) => {
+  await pgvector.registerTypes(client);
 });
 
 module.exports = pool;

@@ -2,6 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const pool = require('./db');
 const OpenAI = require('openai');
+const pgvector = require('pgvector/pg');
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY
@@ -39,11 +40,13 @@ async function ingest() {
   let totalChunks = 0;
 
   try {
-    const connection = await pool.getConnection();
+    const client = await pool.connect();
 
     try {
+      await pgvector.registerTypes(client);
+
       // Clear existing data
-      await connection.query('DELETE FROM mcaptain');
+      await client.query('DELETE FROM mcaptain');
       console.log('Cleared all existing rows from mcaptain table.');
 
       // Read all .txt files from content/
@@ -68,12 +71,11 @@ async function ingest() {
 
           for (const chunk of chunks) {
             const embedding = await createEmbedding(chunk);
-            const float32Array = new Float32Array(embedding);
-            const buffer = Buffer.from(float32Array.buffer);
+            const embeddingSql = pgvector.toSql(embedding);
 
-            await connection.query(
-              'INSERT INTO mcaptain (text, vector, source) VALUES (?, ?, ?)',
-              [chunk, buffer, file]
+            await client.query(
+              'INSERT INTO mcaptain (text, embedding, source) VALUES ($1, $2::vector, $3)',
+              [chunk, embeddingSql, file]
             );
           }
 
@@ -85,7 +87,7 @@ async function ingest() {
         }
       }
     } finally {
-      connection.release();
+      client.release();
     }
   } catch (error) {
     console.error('Error:', error.message);
